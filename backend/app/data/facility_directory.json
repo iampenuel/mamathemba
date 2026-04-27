@@ -1,0 +1,56 @@
+[
+  {
+    "id": "ZA-GP-CMJAH",
+    "name": "Charlotte Maxeke Johannesburg Academic Hospital",
+    "facility_type": "Academic hospital",
+    "address": "17 Jubilee Road, Parktown, Johannesburg",
+    "phone": "011 488 3793",
+    "lat": -26.1768,
+    "lng": 28.0448,
+    "capability_level": "comprehensive",
+    "services": {
+      "accepts_obstetric_referrals": true,
+      "maternal_stabilization": true,
+      "blood_support": true,
+      "operative_capability": true
+    },
+    "source": "Gauteng Provincial Government listed facilities",
+    "verification_status": "Reviewed clinical metadata; clinician must confirm receiving capability, availability, and acceptance before transfer."
+  },
+  {
+    "id": "ZA-GP-CHBAH",
+    "name": "Chris Hani Baragwanath Academic Hospital",
+    "facility_type": "Academic hospital",
+    "address": "26 Chris Hani Road, Diepkloof, Soweto, Johannesburg",
+    "phone": "011 933 7283 | 011 933 9145",
+    "lat": -26.2623,
+    "lng": 27.9395,
+    "capability_level": "comprehensive",
+    "services": {
+      "accepts_obstetric_referrals": true,
+      "maternal_stabilization": true,
+      "blood_support": true,
+      "operative_capability": true
+    },
+    "source": "Gauteng Provincial Government listed facilities",
+    "verification_status": "Reviewed clinical metadata; clinician must confirm receiving capability, availability, and acceptance before transfer."
+  },
+  {
+    "id": "ZA-GP-RMMCH",
+    "name": "Rahima Moosa Mother and Child Hospital",
+    "facility_type": "Mother and child hospital",
+    "address": "Fuel Road, Coronationville, Johannesburg",
+    "phone": "011 470 9285 | 081 010 0040",
+    "lat": -26.1783,
+    "lng": 27.9824,
+    "capability_level": "specialized",
+    "services": {
+      "accepts_obstetric_referrals": true,
+      "maternal_stabilization": true,
+      "blood_support": true,
+      "operative_capability": true
+    },
+    "source": "Gauteng Provincial Government contact listing",
+    "verification_status": "Reviewed clinical metadata; clinician must confirm receiving capability, availability, and acceptance before transfer."
+  }
+]

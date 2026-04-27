@@ -1,0 +1,4 @@
+fastapi==0.136.0
+uvicorn==0.44.0
+python-dotenv==1.2.2
+ibm-watsonx-ai==1.5.10
