@@ -21,3 +21,4 @@ backend/.venv/
 # Python caches
 __pycache__/
 *.py[cod]
+.vercel
