@@ -444,7 +444,7 @@ export async function submitCaseForReview(
 ): Promise<ReviewData> {
   if (!API_BASE_URL) {
     throw new Error(
-      "Backend API URL is not configured for this deployment. Set NEXT_PUBLIC_API_BASE_URL to the deployed IBM Code Engine backend URL."
+      "Backend API URL is not configured for this deployment. Set NEXT_PUBLIC_API_BASE_URL to the deployed backend URL."
     );
   }
 
@@ -496,7 +496,7 @@ export async function submitCaseForReview(
   } catch (error) {
     if (error instanceof TypeError) {
       throw new Error(
-        `Could not reach the backend at ${API_BASE_URL}. Start the FastAPI API on http://127.0.0.1:8001 and confirm /api/health returns an ok status.`
+        `Could not reach the backend at ${API_BASE_URL}. Confirm the deployed backend is reachable and that CORS allows this frontend origin.`
       );
     }
 

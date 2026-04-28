@@ -1,50 +1,63 @@
 # Mamathemba Deployment Readiness
 
 ## Goal
-Prepare Mamathemba for split deployment without changing the current local product architecture:
 
-- `frontend/` deploys separately
-- `backend/` deploys separately
-- IBM watsonx credentials stay backend-only
-- local development continues to use Next.js on `3000` and FastAPI on `8001`
+Keep Mamathemba deployable as a split public prototype:
 
-## Phase 0: Stabilize local flow first
-Before deploying anything:
+- `frontend/` deploys to Vercel.
+- `backend/` deploys to Render.
+- IBM watsonx and Google Maps credentials stay backend-only.
+- Local development continues to use Next.js on `3000` and FastAPI on `8001`.
 
-1. Start the backend from `backend/`
+## Local Stability Check
+
+Before deploying:
+
+1. Start the backend from `backend/`.
+
    ```bash
    .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
    ```
-2. Confirm backend health
+
+2. Confirm backend health.
+
    ```bash
    curl http://127.0.0.1:8001/api/health
    ```
-3. Start the frontend from `frontend/`
+
+3. Start the frontend from `frontend/`.
+
    ```bash
    npm run dev
    ```
-4. Confirm the local workflow:
-   - `/` landing page loads
-   - `/new-case` loads
-   - `Continue to review` reaches `/review`
-   - referral summary, facility options, handoff draft, and next steps render
 
-## Environment variables
+4. Confirm the local workflow:
+   - `/` landing page loads.
+   - `/new-case` loads.
+   - `Continue to review` reaches `/review`.
+   - Referral summary, facility options, handoff draft, checklist, save, and approval controls render.
+
+## Environment Variables
 
 ### Frontend
+
 Create `frontend/.env.local` from `frontend/.env.example`.
-For production, mirror `frontend/.env.production.example` in the Vercel environment settings.
+For production, mirror `frontend/.env.production.example` in Vercel.
 
 Required:
 
 - `NEXT_PUBLIC_API_BASE_URL`
   - Local: `http://127.0.0.1:8001`
-  - Production: your deployed backend URL, for example `https://mamathemba-api.<region>.codeengine.appdomain.cloud`
-  - Required in production. The frontend intentionally does not fall back to localhost in production builds.
+  - Production: `https://mamathemba-1.onrender.com`
+- `NEXT_PUBLIC_ENABLE_DEVICE_LOCATION`
+  - Default: `false`
+
+Frontend variables are public. Do not place watsonx or Google Maps secrets in the frontend.
 
 ### Backend
+
 Create `backend/.env` from `backend/.env.example`.
-For production, mirror `backend/.env.production.example` in IBM Cloud Code Engine secrets/environment variables.
+For production, mirror `backend/.env.production.example` in Render.
 
 Required:
 
@@ -56,78 +69,85 @@ Optional:
 
 - `WATSONX_MODEL_ID`
 - `FRONTEND_ORIGINS`
-  - Comma-separated allowlist for local plus deployed frontend origins
+  - Comma-separated allowlist for local plus deployed frontend origins.
 - `MAPS_PROVIDER`
-  - Use `offline` by default, or `google` to enable backend-only Google Geocoding, Places, and Routes calls
+  - Use `offline` by default, or `google` to enable backend-only Google Geocoding, Places, and Routes calls.
 - `GOOGLE_MAPS_API_KEY`
-  - Backend secret only; enable and restrict it to Geocoding API, Places API, and Routes API
+  - Backend secret only; restrict it to the required Google APIs.
 - `GOOGLE_PLACES_RADIUS_METERS`
-  - Optional nearby-hospital search radius; defaults to `50000`
+  - Optional nearby-hospital search radius; defaults to `50000`.
 
 Rules:
 
-- Do not place watsonx secrets in the frontend
-- Do not place Google Maps API keys in the frontend
-- Do not commit populated `.env` files
-- Use Code Engine secrets or environment variables for production
+- Do not commit populated `.env` files.
+- Do not paste API keys in chat.
+- Store backend secrets only in Render or local `backend/.env`.
 
-## Backend deployment plan: IBM Cloud Code Engine
+## Backend Deployment: Render
 
-### Why this fits
-- Keeps the IBM story strong: watsonx.ai plus IBM Cloud Code Engine
-- Works well for a containerized FastAPI API
-- Keeps secrets on the backend only
+Render service settings:
 
-### Backend packaging in this repo
-- `backend/requirements.txt` defines the Python dependencies
-- `backend/Dockerfile` packages the FastAPI service
-- `backend/.dockerignore` keeps secrets and local virtualenv files out of the image
+- Service type: Web Service
+- Runtime: Docker
+- Docker context: `backend`
+- Dockerfile path: `backend/Dockerfile`
+- Health check path: `/api/health`
+- Public URL: `https://mamathemba-1.onrender.com`
 
-### Container behavior
-- Entrypoint runs `uvicorn app.main:app`
-- The container honors Code Engine's `PORT` environment variable
-- Health endpoint for smoke tests: `/api/health`
+Set production environment variables in Render:
 
-### Code Engine checklist
-1. Build and publish the backend container image
-2. Create a Code Engine app from that image
-3. Set backend environment variables and secrets:
-   - `WATSONX_URL`
-   - `WATSONX_PROJECT_ID`
-   - `WATSONX_APIKEY`
-   - `WATSONX_MODEL_ID`
-   - `FRONTEND_ORIGINS`
-   - `MAPS_PROVIDER`
-   - `GOOGLE_MAPS_API_KEY`
-   - `GOOGLE_PLACES_RADIUS_METERS`
-4. Deploy and confirm:
-   - `GET /api/health` returns `ok`
-   - `POST /api/cases/intake` returns a valid packet
-5. Record the backend public URL for frontend configuration
+```env
+WATSONX_URL=https://us-south.ml.cloud.ibm.com
+WATSONX_PROJECT_ID=your-watsonx-project-id
+WATSONX_APIKEY=store-as-render-secret
+WATSONX_MODEL_ID=mistralai/mistral-small-3-1-24b-instruct-2503
+FRONTEND_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,https://mamathemba.vercel.app
+MAPS_PROVIDER=google
+GOOGLE_MAPS_API_KEY=store-as-render-secret
+GOOGLE_GEOCODING_REGION=
+GOOGLE_PLACES_RADIUS_METERS=50000
+```
 
-## Frontend deployment plan: Vercel first, Cloudflare Pages second
+After env changes, redeploy or restart Render. Free-tier services may sleep, so the first request can be slow.
 
-### Preferred path now
-Use Vercel first for the judged prototype because the current Next.js app is already closest to that path.
+Confirm:
 
-### Frontend checklist
-1. Set `NEXT_PUBLIC_API_BASE_URL` to the deployed backend URL
-2. Deploy the `frontend/` app
-3. Smoke test:
-   - landing page
-   - `/new-case`
-   - `/review`
-   - client-to-backend POST flow
+```bash
+curl https://mamathemba-1.onrender.com/api/health
+```
 
-### Cloudflare Pages note
-Cloudflare Pages is still a possible direction, but this repo does not yet include Cloudflare-specific Next.js adapter setup. Treat that as a later platform variant, not the current default deployment target.
+## Frontend Deployment: Vercel
 
-## Split-deployment smoke test
+Vercel project settings:
+
+- Project name: `mamathemba`
+- Root directory: `frontend`
+- Framework preset: Next.js
+- Build command: default or `npm run build`
+- Output directory: blank/default
+
+Set production environment variables in Vercel:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=https://mamathemba-1.onrender.com
+NEXT_PUBLIC_ENABLE_DEVICE_LOCATION=false
+```
+
+The committed `frontend/vercel.json` pins the Vercel framework to Next.js.
+
+## Split-Deployment Smoke Test
+
 After both sides are deployed:
 
-1. Open the frontend URL
-2. Start a new case
-3. Submit the canonical postpartum severe-bleeding scenario
+```bash
+sh scripts/smoke_test_public_deploy.sh https://mamathemba.vercel.app https://mamathemba-1.onrender.com
+```
+
+Then manually confirm:
+
+1. Open the frontend URL.
+2. Start a new case.
+3. Submit a postpartum severe-bleeding demo case.
 4. Confirm `/review` renders:
    - referral summary
    - missing information
@@ -135,12 +155,13 @@ After both sides are deployed:
    - handoff note
    - next steps
    - entered facts snapshot
-5. Confirm browser devtools show requests going only to the backend API base URL
-6. Confirm no watsonx secret appears in frontend bundles or public env
+5. Confirm browser requests go only to the deployed backend API base URL.
+6. Confirm no watsonx or Google Maps secret appears in frontend bundles, public env, or browser storage.
 
-## Current truth
-- The app is now locally structured for split deployment
-- Backend CORS supports local origins by default and deployed origins through `FRONTEND_ORIGINS`
-- Backend containerization is now prepared
-- Frontend deployment env configuration is now prepared
-- Production deployment itself has not been performed in this repo yet
+## Current Truth
+
+- The public frontend is live on Vercel.
+- The public backend is live on Render.
+- Backend CORS supports local origins by default and deployed origins through `FRONTEND_ORIGINS`.
+- Production frontend env points to the Render backend.
+- Backend secrets remain backend-only.

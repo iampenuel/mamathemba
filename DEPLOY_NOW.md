@@ -1,54 +1,64 @@
 # Mamathemba Public Prototype Deployment
 
-Use this when the local flow is stable and you need a professional public link.
+Use this checklist when the local flow is stable and you need the public prototype online.
 
 ## Target URLs
 
-- Frontend: Vercel, for example `https://mamathemba.vercel.app`
-- Backend: IBM Cloud Code Engine, for example `https://mamathemba-api.<region>.codeengine.appdomain.cloud`
+- Frontend: `https://mamathemba.vercel.app`
+- Backend: `https://mamathemba-1.onrender.com`
+- Backend health: `https://mamathemba-1.onrender.com/api/health`
 
-`localhost:3000` is only for local development and should not be used in the demo.
+`localhost:3000` and `127.0.0.1:8001` are local development only and should not be used for the public demo.
 
-## 1. Deploy Backend To IBM Cloud Code Engine
+## 1. Check Readiness
 
-Use `backend/` as the container build context.
-
-Before opening the dashboards, run:
+From the repo root:
 
 ```bash
 sh scripts/check_deployment_readiness.sh
 ```
 
-Required production environment variables:
-
-- `WATSONX_URL`
-- `WATSONX_PROJECT_ID`
-- `WATSONX_APIKEY`
-- `WATSONX_MODEL_ID`
-- `FRONTEND_ORIGINS`
-- `MAPS_PROVIDER=google`
-- `GOOGLE_MAPS_API_KEY`
-- `GOOGLE_PLACES_RADIUS_METERS=50000`
-
-Keep `WATSONX_APIKEY` and `GOOGLE_MAPS_API_KEY` as backend-only Code Engine secrets.
-
-Do not send these values in chat. Put them directly into IBM Cloud:
-
-- `WATSONX_APIKEY`
-- `GOOGLE_MAPS_API_KEY`
-- IBM/Vercel account tokens
-
-Safe to send back for debugging:
-
-- the backend public URL
-- whether `/api/health` returns `ok`
-- the Vercel frontend URL
-- screenshots or non-secret error messages
-
-After deploy, confirm:
+Confirm local checks before deploying:
 
 ```bash
-curl https://your-mamathemba-api-url/api/health
+cd frontend
+npm run lint
+npm run build
+cd ..
+python3 -m compileall -q backend/app
+```
+
+## 2. Backend On Render
+
+Render service:
+
+- Service name: `mamathemba-1`
+- Runtime: Docker
+- Docker context: `backend`
+- Dockerfile path: `backend/Dockerfile`
+- Health check path: `/api/health`
+- Public URL: `https://mamathemba-1.onrender.com`
+
+Required backend environment variables:
+
+```env
+WATSONX_URL=https://us-south.ml.cloud.ibm.com
+WATSONX_PROJECT_ID=your-watsonx-project-id
+WATSONX_APIKEY=store-as-render-secret
+WATSONX_MODEL_ID=mistralai/mistral-small-3-1-24b-instruct-2503
+FRONTEND_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,https://mamathemba.vercel.app
+MAPS_PROVIDER=google
+GOOGLE_MAPS_API_KEY=store-as-render-secret
+GOOGLE_GEOCODING_REGION=
+GOOGLE_PLACES_RADIUS_METERS=50000
+```
+
+Keep `WATSONX_APIKEY` and `GOOGLE_MAPS_API_KEY` backend-only. Do not send those values in chat, put them directly into Render.
+
+After saving env changes, redeploy or restart the Render service. Confirm:
+
+```bash
+curl https://mamathemba-1.onrender.com/api/health
 ```
 
 Expected response includes:
@@ -57,49 +67,45 @@ Expected response includes:
 {"status":"ok","service":"mamathemba-backend"}
 ```
 
-## 2. Deploy Frontend To Vercel
+## 3. Frontend On Vercel
 
-Use `frontend/` as the Vercel project root.
+Vercel project:
 
-Set this Vercel environment variable:
+- Project name: `mamathemba`
+- Root directory: `frontend`
+- Framework preset: Next.js
+- Build command: default or `npm run build`
+- Output directory: blank/default
+
+Required Vercel environment variables:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=https://your-mamathemba-api-url
+NEXT_PUBLIC_API_BASE_URL=https://mamathemba-1.onrender.com
 NEXT_PUBLIC_ENABLE_DEVICE_LOCATION=false
 ```
 
-Do not set watsonx or Google API keys in Vercel.
-
-## 3. Final CORS Update
-
-After Vercel gives you the frontend URL, update the backend Code Engine variable:
-
-```env
-FRONTEND_ORIGINS=https://your-mamathemba-frontend.vercel.app
-```
-
-Redeploy or restart the Code Engine app after updating the variable.
+Do not set watsonx, Google Maps, or Render secret values in Vercel.
 
 ## 4. Public Smoke Test
 
-From the Vercel URL:
-
-1. Open `/`.
-2. Click into `/new-case`.
-3. Enter the canonical postpartum severe-bleeding case.
-4. Submit to `/review`.
-5. Confirm facility options, selected facility detail, draft handoff note, next-step checklist, save, and approval all work.
-6. Confirm browser network requests go to the Code Engine backend URL, not localhost.
-
-You can also run the non-secret endpoint smoke test:
+Run:
 
 ```bash
-sh scripts/smoke_test_public_deploy.sh https://your-frontend.vercel.app https://your-mamathemba-api-url
+sh scripts/smoke_test_public_deploy.sh https://mamathemba.vercel.app https://mamathemba-1.onrender.com
 ```
+
+Then browser-test:
+
+1. Open `https://mamathemba.vercel.app`.
+2. Go to `/new-case`.
+3. Enter a postpartum severe-bleeding demo case.
+4. Submit to `/review`.
+5. Confirm facility options, selected facility detail, draft handoff note, next-step checklist, save, and approval controls work.
+6. Confirm browser network requests go to `https://mamathemba-1.onrender.com`, not localhost.
 
 ## Safety Check
 
 - No populated `.env` files are committed.
-- Frontend env only contains `NEXT_PUBLIC_API_BASE_URL` and non-sensitive public flags.
-- IBM watsonx and Google Maps secrets stay backend-only.
+- Frontend env only contains public `NEXT_PUBLIC_*` variables.
+- IBM watsonx and Google Maps credentials stay backend-only.
 - Facility output remains clinical support only and human-reviewed.

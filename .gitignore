@@ -8,7 +8,9 @@ backend/.env.*
 frontend/.env.local
 !.env.example
 !backend/.env.example
+!backend/.env.production.example
 !frontend/.env.example
+!frontend/.env.production.example
 
 # Dependency and build outputs
 node_modules/

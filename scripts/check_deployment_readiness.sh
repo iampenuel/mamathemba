@@ -30,7 +30,7 @@ echo
 if command -v ibmcloud >/dev/null 2>&1; then
   echo "ok  ibmcloud CLI installed"
 else
-  echo "info ibmcloud CLI not installed; use IBM Cloud dashboard or install CLI"
+  echo "info ibmcloud CLI not installed; not required for current Render deployment"
 fi
 
 if command -v vercel >/dev/null 2>&1; then
@@ -42,7 +42,13 @@ fi
 if command -v docker >/dev/null 2>&1; then
   echo "ok  Docker installed"
 else
-  echo "info Docker not installed; Code Engine can still build from source/Git"
+  echo "info Docker not installed; Render can still build from Git"
+fi
+
+if command -v render >/dev/null 2>&1; then
+  echo "ok  Render CLI installed"
+else
+  echo "info Render CLI not installed; use Render dashboard for backend deployment"
 fi
 
 echo
