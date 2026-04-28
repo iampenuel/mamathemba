@@ -133,7 +133,7 @@ NEXT_PUBLIC_API_BASE_URL=https://mamathemba-1.onrender.com
 NEXT_PUBLIC_ENABLE_DEVICE_LOCATION=false
 ```
 
-The committed `frontend/vercel.json` pins the Vercel framework to Next.js.
+The Vercel project setting should pin the framework preset to Next.js.
 
 ## Split-Deployment Smoke Test
 

@@ -1,47 +1,124 @@
 # Mamathemba
 
-Clinical support prototype for maternal emergency referral readiness and handoff preparation.
+> A clinician-facing maternal emergency referral-readiness and handoff copilot for rural and resource-constrained clinics.
 
-Mamathemba helps a clinician prepare a structured maternal emergency referral packet: entered case facts, referral-readiness summary, facility options, a draft handoff note, and next-step checklist.
+[Live prototype](https://mamathemba.vercel.app) · [Backend health](https://mamathemba-1.onrender.com/api/health)
 
-Live prototype:
+Mamathemba is built around a simple product truth: in a maternal emergency, the clinician does not need an AI that tries to play doctor. She needs a system that helps reduce delay.
 
-- Frontend: [https://mamathemba.vercel.app](https://mamathemba.vercel.app)
-- Backend health: [https://mamathemba-1.onrender.com/api/health](https://mamathemba-1.onrender.com/api/health)
+Picture a midwife in a rural clinic who recognizes danger signs in a woman in labor or shortly after birth. The next minutes matter. The work is not to invent a diagnosis or replace clinical judgment. The work is to prepare the referral pathway: capture the key case facts, check what is missing, compare realistic facility options, draft a handoff, and make it easier to review before sending.
 
-## Safety Framing
+That is the job of Mamathemba.
 
-Mamathemba is clinical support only.
+## Why This Matters
 
-It is human-in-the-loop and is not a diagnostic system. It does not provide autonomous triage, treatment planning, dispatch, or final referral decision-making. Facility options and handoff drafts are prepared for clinician review.
+Maternal emergencies are often made worse by delay: delay in recognizing risk, delay in deciding where to refer, delay in transport, delay in handoff, and delay in receiving the right level of care.
 
-Backend-only services may use IBM watsonx and Google Maps APIs when configured. API keys and model credentials must never be placed in frontend environment variables, browser storage, or committed files.
+Sub-Saharan Africa carries a disproportionate share of global maternal deaths, and rural or crisis-affected areas face some of the hardest constraints: workforce shortages, uneven facility capability, transport friction, and gaps in essential supplies. Mamathemba is designed with that reality in mind.
 
-## Demo Flow
+It is an Africa-centered healthcare workflow prototype for referral readiness, not a generic healthcare chatbot.
 
-1. Open the public frontend.
-2. Start a new case from `/new-case`.
-3. Enter structured maternal emergency referral details.
-4. Continue to `/review`.
-5. Review the referral summary, facility options, handoff note, checklist, save state, and approval controls.
+## What It Does
+
+Mamathemba helps a clinician prepare a referral packet from entered information:
+
+- structured case intake
+- referral-readiness summary
+- missing-information checks
+- facility option comparison
+- selected facility detail
+- draft handoff note
+- next-step checklist
+- local save-for-review workflow
+- clinician approval state
+
+The current prototype supports the public flow:
+
+```text
+/ -> /new-case -> /review
+```
+
+## Product Boundaries
+
+Mamathemba is:
+
+- human-in-the-loop clinical support
+- a maternal referral-readiness workflow product
+- a handoff preparation system
+- a facility comparison and referral packet tool
+- a full-stack healthcare workflow application
+- safety-conscious AI support for low-resource settings
+
+Mamathemba is not:
+
+- a diagnostic system
+- autonomous triage
+- treatment planning
+- medication recommendation
+- ambulance dispatch
+- an EMR
+- a generic healthcare chatbot
+- a replacement for clinician judgment
+
+Language in the product should stay inside this boundary:
+
+- Clinical support only
+- Not a diagnostic system
+- Final referral decision remains with the clinician
+- Review before sending
+- Based on entered information
+- Verify facility availability before transfer
+
+## Who It Serves
+
+Mamathemba is intended for workflows involving:
+
+- midwives
+- rural clinics
+- district hospitals
+- referral coordinators
+- ambulance or transport coordination teams
+- maternal-health NGOs
+- mothers and newborns at vulnerable moments of care
 
 ## Architecture
 
-- `frontend/`: Next.js, React, Tailwind app deployed on Vercel.
-- `backend/`: FastAPI service deployed on Render.
-- `backend/app/services/`: handoff generation, facility matching, geocoding, places, routing, and Africa boundary helpers.
-- `scripts/`: deployment readiness and public smoke-test scripts.
+This is a split full-stack prototype.
 
-Current production endpoints:
+```text
+frontend/   Next.js, React, Tailwind, Vercel
+backend/    FastAPI, Python, Render
+scripts/    readiness and smoke-test helpers
+```
 
-- Vercel frontend: `https://mamathemba.vercel.app`
-- Render backend: `https://mamathemba-1.onrender.com`
-- Health endpoint: `/api/health`
-- Intake endpoint: `/api/cases/intake`
+Core backend services include:
+
+- handoff draft generation
+- facility matching
+- geocoding
+- Google Places lookup when configured
+- route estimation when configured
+- Africa boundary handling
+- local fallback behavior when live AI or map services are unavailable
+
+Backend-only integrations:
+
+- IBM watsonx for draft handoff support
+- Google Maps APIs for geocoding, places, and routing
+
+Secrets stay on the backend. They must never be committed, exposed in Vercel, or stored in browser state.
+
+## Live Deployment
+
+- Frontend: `https://mamathemba.vercel.app`
+- Backend: `https://mamathemba-1.onrender.com`
+- Health check: `https://mamathemba-1.onrender.com/api/health`
+
+The backend runs on Render's free tier, so the first request after sleep may be slow.
 
 ## Local Development
 
-### Backend
+Start the backend:
 
 ```bash
 cd backend
@@ -51,15 +128,13 @@ pip install -r requirements.txt
 uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
 ```
 
-Confirm health:
+Confirm backend health:
 
 ```bash
 curl http://127.0.0.1:8001/api/health
 ```
 
-Create `backend/.env` from `backend/.env.example` for local secrets and optional live services. Do not commit populated `.env` files.
-
-### Frontend
+Start the frontend:
 
 ```bash
 cd frontend
@@ -68,18 +143,22 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Local frontend defaults to `http://localhost:3000` and calls the backend at `http://127.0.0.1:8001`.
+Open:
+
+```text
+http://localhost:3000
+```
 
 ## Environment Variables
 
-Frontend variables are public by design:
+Frontend variables are public:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8001
 NEXT_PUBLIC_ENABLE_DEVICE_LOCATION=false
 ```
 
-Backend variables stay server-side:
+Backend variables are server-side:
 
 ```env
 WATSONX_URL=https://us-south.ml.cloud.ibm.com
@@ -92,33 +171,36 @@ GOOGLE_MAPS_API_KEY=
 GOOGLE_PLACES_RADIUS_METERS=50000
 ```
 
-For production, set backend secrets in Render and frontend public variables in Vercel.
+Use `backend/.env.example`, `backend/.env.production.example`, `frontend/.env.example`, and `frontend/.env.production.example` as templates. Do not commit populated `.env` files.
 
-## Deployment
+## Deployment Notes
 
-The current public prototype uses split deployment:
+Current public deployment:
 
-- Frontend: Vercel project rooted at `frontend/`.
-- Backend: Render web service using `backend/Dockerfile`.
+- Vercel frontend rooted at `frontend/`
+- Render backend using `backend/Dockerfile`
 
-Vercel production variables:
+Vercel production env:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=https://mamathemba-1.onrender.com
 NEXT_PUBLIC_ENABLE_DEVICE_LOCATION=false
 ```
 
-Render `FRONTEND_ORIGINS` should include:
+Render `FRONTEND_ORIGINS`:
 
 ```env
 http://localhost:3000,http://127.0.0.1:3000,https://mamathemba.vercel.app
 ```
 
-See [DEPLOY_NOW.md](DEPLOY_NOW.md) and [DEPLOYMENT.md](DEPLOYMENT.md) for the current deployment checklist.
+Deployment checklists:
+
+- [DEPLOY_NOW.md](DEPLOY_NOW.md)
+- [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ## Verification
 
-Run the local checks:
+Local checks:
 
 ```bash
 cd frontend
@@ -129,24 +211,38 @@ python3 -m compileall -q backend/app
 sh scripts/check_deployment_readiness.sh
 ```
 
-Run the public smoke test:
+Public smoke test:
 
 ```bash
 sh scripts/smoke_test_public_deploy.sh https://mamathemba.vercel.app https://mamathemba-1.onrender.com
 ```
 
-## Privacy And Data Notes
+## Privacy And Safety Notes
 
 - Device location is disabled by default for the prototype.
-- Clinician-entered clinic or address location is preferred for facility matching.
+- Clinician-entered clinic or address location is the preferred origin signal.
 - Precise origin coordinates should not be persisted in browser review storage.
 - Google Maps and IBM watsonx credentials stay backend-only.
-- Facility matching is referral-readiness support, not a final referral decision.
+- Google-only facility results should not receive clinical readiness scores.
+- Facility availability must be verified before transfer.
+- Final referral decisions remain with the clinician.
 
-## GitHub About
+## Suggested GitHub About
 
-Suggested repository metadata:
+Description:
 
-- Description: `Clinical support prototype for maternal emergency referral readiness and handoff preparation.`
-- Website: `https://mamathemba.vercel.app`
-- Topics: `maternal-health`, `clinical-support`, `referral-readiness`, `handoff`, `fastapi`, `nextjs`, `watsonx`, `google-maps`, `render`, `vercel`
+```text
+Clinician-facing maternal emergency referral-readiness and handoff copilot for rural and resource-constrained clinics.
+```
+
+Website:
+
+```text
+https://mamathemba.vercel.app
+```
+
+Topics:
+
+```text
+maternal-health clinical-support referral-readiness handoff fastapi nextjs watsonx google-maps render vercel
+```
