@@ -217,6 +217,8 @@ Public smoke test:
 sh scripts/smoke_test_public_deploy.sh https://mamathemba.vercel.app https://mamathemba-1.onrender.com
 ```
 
+Browser workflow smoke-test steps: [docs/SMOKE_TEST.md](docs/SMOKE_TEST.md)
+
 ## Privacy And Safety Notes
 
 - Device location is disabled by default for the prototype.

@@ -35,4 +35,5 @@ curl -fsSI "$FRONTEND_URL" | sed -n '1,8p'
 
 echo
 echo "Public smoke endpoints are reachable."
-echo "Now browser-test: landing page, new case, continue to review, facility options, handoff note, checklist, save, and approval."
+echo "Next step: complete the browser workflow smoke checks in docs/SMOKE_TEST.md."
+echo "Verify New Case -> Review -> facility comparison -> handoff review before accepting the deployment."
