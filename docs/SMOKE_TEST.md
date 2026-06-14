@@ -178,7 +178,7 @@ This smoke test protects against:
 
 ## Dated Smoke-Test Result
 
-- Date/time: 2026-06-14 04:36:24 UTC
+- Date/time: 2026-06-14 04:44:43 UTC
 - Frontend URL: https://mamathemba.vercel.app
 - Backend URL: https://mamathemba-1.onrender.com
 - Endpoint smoke script result: Passed - backend health returned status ok, frontend returned HTTP/2 200, and public smoke endpoints were reachable.
@@ -193,6 +193,6 @@ This smoke test protects against:
 - Production frontend used Render backend, not localhost: Not checked
 - Safety-boundary language stayed within referral-readiness/handoff support: Passed
 - No diagnosis/autonomous triage/treatment/dispatch/EMR/medication-advice/clinician-replacement claims observed: Passed
-- No live bed/blood/acceptance/transport availability claims observed: Failed
+- No live bed/blood/acceptance/transport availability claims observed: Passed
 - No secrets visible in browser/network/public frontend state: Passed
-- Notes or failures: Site storage was cleared before testing. Browser reached `/review` and rendered the review packet, facility comparison, handoff note, checklist, and review controls. The complete demo case showed the missing-information panel with "No missing information flagged in the current review." Browser-observed text still included "Blood support available", "Maternal stabilization available", and "Operative capability available", so the no-live-availability-claims check failed and those unsafe phrases are not gone. Browser performance entries did not expose the intake fetch URL, so Render-vs-localhost API usage was not checked from network evidence; no localhost resources were observed. Visible page text, browser storage, and checked public frontend scripts did not show watsonx or Google Maps secrets.
+- Notes or failures: Site storage was cleared before testing. Browser reached `/review` and rendered the review packet, facility comparison, handoff note, checklist, and review controls. The complete demo case showed the missing-information panel with "No missing information flagged in the current review." Browser-observed text did not include "Blood support available", "Maternal stabilization available", "Operative capability available", or "Facility identity available". Browser-observed text included "Blood support listed for clinician verification", "Maternal stabilization listed for clinician verification", and "Operative capability listed for clinician verification". "Facility identity listed" was not checked because the returned demo facilities were reviewed metadata facilities, not identity-only facilities. Browser performance entries did not expose the intake fetch URL, so Render-vs-localhost API usage was not checked from network evidence; no localhost resources were observed. Visible page text, browser storage, and checked public frontend scripts did not show watsonx or Google Maps secrets.
