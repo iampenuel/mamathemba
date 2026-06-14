@@ -68,7 +68,7 @@ function formatCapability(value: string): string {
   const normalizedValue = value.trim().toLowerCase();
 
   if (normalizedValue === "unverified" || normalizedValue === "identity_only") {
-    return "Facility identity available";
+    return "Facility identity listed";
   }
 
   return normalizeToken(value).replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -76,6 +76,32 @@ function formatCapability(value: string): string {
 
 function safeFacilityText(value: string): string {
   return value
+    .replaceAll(
+      "Blood support available",
+      "Blood support listed for clinician verification"
+    )
+    .replaceAll(
+      "blood support available",
+      "blood support listed for clinician verification"
+    )
+    .replaceAll(
+      "Maternal stabilization available",
+      "Maternal stabilization listed for clinician verification"
+    )
+    .replaceAll(
+      "maternal stabilization available",
+      "maternal stabilization listed for clinician verification"
+    )
+    .replaceAll(
+      "Operative capability available",
+      "Operative capability listed for clinician verification"
+    )
+    .replaceAll(
+      "operative capability available",
+      "operative capability listed for clinician verification"
+    )
+    .replaceAll("Facility identity available", "Facility identity listed")
+    .replaceAll("facility identity available", "facility identity listed")
     .replaceAll(
       legacyClinicalCapabilityPhrase,
       "Clinical services not scored"
