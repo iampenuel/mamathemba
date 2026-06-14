@@ -14,6 +14,15 @@ from app.services.watsonx_service import (
 router = APIRouter(prefix="/api/cases", tags=["cases"])
 logger = logging.getLogger(__name__)
 
+GENERIC_INTAKE_ERROR = "Could not process intake case."
+EXPECTED_INTAKE_FALLBACK_ERRORS: tuple[type[Exception], ...] = (
+    RuntimeError,
+    OSError,
+    ValueError,
+    TypeError,
+    KeyError,
+)
+
 
 class CaseIntakeRequest(BaseModel):
     patient_id: str
@@ -125,27 +134,50 @@ def intake_case(payload: CaseIntakeRequest):
 
         # Keep facility matching optional so it never breaks intake.
         facility_options = []
+        origin_payload = {
+            "danger_signs": danger_signs,
+            "pregnancy_status": payload.pregnancy_status,
+            "transport_mode": payload.transport_mode,
+            "origin_label": payload.origin_label,
+            "origin_address": payload.origin_address,
+            "origin_lat": payload.origin_lat,
+            "origin_lng": payload.origin_lng,
+            "origin_source": payload.origin_source,
+            "origin_country_code": payload.origin_country_code,
+            "origin_country": payload.origin_country,
+            "origin_admin1": payload.origin_admin1,
+            "origin_admin2": payload.origin_admin2,
+        }
+        resolved_origin: dict[str, Any] | None = None
+        ranked_facilities: list[dict[str, Any]] = []
+        facility_ranking_completed = False
+
         try:
-            origin_payload = {
-                "danger_signs": danger_signs,
-                "pregnancy_status": payload.pregnancy_status,
-                "transport_mode": payload.transport_mode,
-                "origin_label": payload.origin_label,
-                "origin_address": payload.origin_address,
-                "origin_lat": payload.origin_lat,
-                "origin_lng": payload.origin_lng,
-                "origin_source": payload.origin_source,
-                "origin_country_code": payload.origin_country_code,
-                "origin_country": payload.origin_country,
-                "origin_admin1": payload.origin_admin1,
-                "origin_admin2": payload.origin_admin2,
-            }
             resolved_origin = resolve_origin(origin_payload)
-            ranked_facilities = rank_facilities(
-                origin_payload,
-                resolved_origin=resolved_origin,
+        except EXPECTED_INTAKE_FALLBACK_ERRORS as exc:
+            logger.exception(
+                "Origin resolution failed during intake for case %s (%s)",
+                payload.patient_id,
+                exc.__class__.__name__,
             )
 
+        if resolved_origin is not None:
+            try:
+                ranked_facilities = rank_facilities(
+                    origin_payload,
+                    resolved_origin=resolved_origin,
+                )
+            except EXPECTED_INTAKE_FALLBACK_ERRORS as exc:
+                logger.exception(
+                    "Facility ranking failed during intake for case %s (%s)",
+                    payload.patient_id,
+                    exc.__class__.__name__,
+                )
+                ranked_facilities = []
+            else:
+                facility_ranking_completed = True
+
+        if resolved_origin is not None and facility_ranking_completed:
             origin_warning = next(
                 (
                     facility.get("origin_warning")
@@ -171,12 +203,6 @@ def intake_case(payload: CaseIntakeRequest):
                         missing_information.append(warning_text)
 
             facility_options = ranked_facilities[:3]
-        except Exception:
-            logger.exception(
-                "Facility matching failed during intake for case %s",
-                payload.patient_id,
-            )
-            facility_options = []
 
         return {
             "case_id": payload.patient_id,
@@ -194,5 +220,6 @@ def intake_case(payload: CaseIntakeRequest):
             ],
         }
     except Exception as exc:
-        logger.exception("Case intake failed for case %s", payload.patient_id)
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        case_id = getattr(payload, "patient_id", "<unknown>")
+        logger.exception("Case intake failed for case %s", case_id)
+        raise HTTPException(status_code=500, detail=GENERIC_INTAKE_ERROR) from exc

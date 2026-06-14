@@ -164,6 +164,25 @@ def test_geocoding_failure_is_non_fatal(client, monkeypatch, demo_case_payload):
     assert data["next_steps"]
 
 
+def test_unexpected_intake_failure_returns_generic_public_error(
+    client,
+    monkeypatch,
+    demo_case_payload,
+):
+    raw_error = "raw intake exception detail should not be public"
+
+    def raise_unexpected_error(value):
+        raise AssertionError(raw_error)
+
+    monkeypatch.setattr(cases_routes, "_to_list", raise_unexpected_error)
+
+    response = client.post("/api/cases/intake", json=demo_case_payload)
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "Could not process intake case."
+    assert raw_error not in response.text
+
+
 def test_generated_safety_copy_stays_inside_product_boundary(
     client,
     demo_case_payload,
