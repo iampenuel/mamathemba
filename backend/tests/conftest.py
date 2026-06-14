@@ -80,7 +80,7 @@ def sample_facility():
         ),
         "capabilities": ["Maternal stabilization listed"],
         "rationale": [
-            "Maternal stabilization available",
+            "Maternal stabilization listed for clinician verification",
             "Clinician must confirm receiving capability, availability, and acceptance before transfer",
         ],
         "score": 42,

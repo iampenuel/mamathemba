@@ -202,7 +202,7 @@ def score_facility(
 
     if is_curated_clinical and _service_enabled(facility, "maternal_stabilization"):
         score += 15
-        rationale.append("Maternal stabilization available")
+        rationale.append("Maternal stabilization listed for clinician verification")
 
     capability_level = str(facility.get("capability_level", "")).lower()
     if not is_curated_clinical and not is_google_places_result:
@@ -220,7 +220,7 @@ def score_facility(
         score += 18
         rationale.append("Specialized maternal facility")
     elif capability_level in {"unverified", "identity_only"}:
-        rationale.append("Facility identity available; clinical services not scored")
+        rationale.append("Facility identity listed; clinical services not scored")
 
     if emergency_maternal_context:
         if (
@@ -228,13 +228,13 @@ def score_facility(
             and _service_enabled(facility, "blood_support")
         ):
             score += 20
-            rationale.append("Blood support available")
+            rationale.append("Blood support listed for clinician verification")
         if (
             ranking_basis == "curated_capability_and_route"
             and _service_enabled(facility, "operative_capability")
         ):
             score += 20
-            rationale.append("Operative capability available")
+            rationale.append("Operative capability listed for clinician verification")
 
     if (
         is_google_places_result
